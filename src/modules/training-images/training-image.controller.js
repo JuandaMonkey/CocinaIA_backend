@@ -34,6 +34,16 @@ export const trainingImageController = {
     res.json({ data: dataset });
   }),
 
+  analyzeDataset: asyncHandler(async (_req, res) => {
+    const analysis = await trainingImageService.analyzeDataset();
+    res.json({ data: analysis });
+  }),
+
+  cleanupDataset: asyncHandler(async (_req, res) => {
+    const result = await trainingImageService.cleanupDataset(_req.validated.body);
+    res.json({ data: result });
+  }),
+
   // llamamos al servicio para eliminar una imagen de entrenamiento
   delete: asyncHandler(async (req, res) => {
     await trainingImageService.deleteTrainingImage(req.validated.params.id);

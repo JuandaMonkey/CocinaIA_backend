@@ -1,4 +1,4 @@
-import { query } from '../../config/database.js';
+import { pool, query } from '../../config/database.js';
 
 // función para convertir el resultado de la base de datos en un objeto imagen de entrenamiento
 function mapTrainingImage(row) {
@@ -117,5 +117,35 @@ export const trainingImageRepository = {
 
     // regresamos la imagen actualizada o null si no existe
     return result.rows[0].updated ? this.findById(id) : null;
+  },
+
+  async applyCleanup({ updates, deleteIds }) {
+    const client = await pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      for (const update of updates) {
+        await client.query(
+          `UPDATE training_images
+           SET label = $2, ingredient_id = $3
+           WHERE id = $1`,
+          [update.id, update.label, update.ingredientId],
+        );
+      }
+
+      if (deleteIds.length) {
+        await client.query('DELETE FROM training_images WHERE id = ANY($1::uuid[])', [deleteIds]);
+      }
+
+      await client.query('COMMIT');
+    } catch (error) {
+      await client.query('ROLLBACK');
+      throw error;
+    } finally {
+      client.release();
+    }
+
+    return { updated: updates.length, deleted: deleteIds.length };
   },
 };

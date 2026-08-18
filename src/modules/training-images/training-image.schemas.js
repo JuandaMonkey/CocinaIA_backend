@@ -23,3 +23,17 @@ export const updateTrainingImageSchema = z.object({
     label: z.string().trim().min(2).max(100),
   }),
 });
+
+export const cleanupDatasetSchema = z.object({
+  body: z.object({
+    deleteDuplicateIds: z.array(z.string().uuid()).default([]),
+    labelChoices: z
+      .array(
+        z.object({
+          normalizedLabel: z.string().trim().min(1).max(100),
+          label: z.string().trim().min(2).max(100),
+        }),
+      )
+      .default([]),
+  }),
+});
